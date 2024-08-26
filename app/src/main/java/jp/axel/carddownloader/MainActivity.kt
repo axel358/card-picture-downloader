@@ -44,7 +44,6 @@ class MainActivity : AppCompatActivity(), CardAdapter.OnCardClickListener {
     private lateinit var sideTv: TextView
     private lateinit var loadButton: MaterialButton
     private lateinit var deckLayout: LinearLayout
-    private lateinit var nameTv: TextView
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var downloadPB: ProgressBar
     private lateinit var downloadTv: TextView
@@ -61,7 +60,6 @@ class MainActivity : AppCompatActivity(), CardAdapter.OnCardClickListener {
         sideTv = findViewById(R.id.side_deck_tv)
         loadButton = findViewById(R.id.load_deck_button)
         deckLayout = findViewById(R.id.deck_layout)
-        nameTv = findViewById(R.id.deck_name_tv)
         mainRv = findViewById(R.id.main_rv)
         extraRv = findViewById(R.id.extra_rv)
         sideRv = findViewById(R.id.side_rv)
@@ -97,7 +95,7 @@ class MainActivity : AppCompatActivity(), CardAdapter.OnCardClickListener {
                         mainTv.text = "Main - ${mainCards.size} cards"
                         extraTv.text = "Extra - ${extraCards.size} cards"
                         sideTv.text = "Side - ${sideCards.size} cards"
-                        nameTv.text = Utils.fileNameFromUri(loadedDeck)
+                        supportActionBar?.subtitle = Utils.fileNameFromUri(loadedDeck)
                         loadButton.visibility = View.GONE
                         deckLayout.visibility = View.VISIBLE
                         var imagesFolder = saveFolder.findFile("images")

@@ -20,82 +20,97 @@
         android:text="Open deck file"
         app:icon="@drawable/ic_cards" />
 
-    <LinearLayout
-        android:id="@+id/deck_layout"
+    <androidx.core.widget.NestedScrollView
+        android:fadingEdgeLength="3dp"
+        android:requiresFadingEdge="vertical"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:visibility="visible">
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
         <LinearLayout
+            android:id="@+id/deck_layout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="vertical">
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:visibility="visible">
 
             <TextView
-                android:id="@+id/deck_name_tv"
+                android:id="@+id/main_deck_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:singleLine="true"
-                android:text="Deck name"
-                android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
-                android:textSize="20sp"
-                android:textStyle="bold" />
+                android:text="Main"
+                android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
 
-            <com.google.android.material.button.MaterialButton
-                style="@style/Widget.Material3.Button.TonalButton"
+            <com.google.android.material.divider.MaterialDivider
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:layout_marginBottom="3dp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/main_rv"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                app:spanCount="8" />
+
+            <TextView
+                android:id="@+id/extra_deck_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:onClick="downloadDeckImages"
-                android:text="Download"
-                app:icon="@drawable/ic_download" />
+                android:layout_marginTop="6dp"
+                android:text="Extra"
+                android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
 
+            <com.google.android.material.divider.MaterialDivider
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:layout_marginBottom="3dp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/extra_rv"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                app:spanCount="8" />
+
+            <TextView
+                android:id="@+id/side_deck_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="Side"
+                android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+            <com.google.android.material.divider.MaterialDivider
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:layout_marginBottom="3dp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/side_rv"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                app:spanCount="8" />
         </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/main_deck_tv"
+        <com.google.android.material.button.MaterialButton
+            style="@style/Widget.Material3.Button.TonalButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="Main"
-            android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+            android:onClick="downloadDeckImages"
+            android:text="Download images"
+            app:icon="@drawable/ic_download" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/main_rv"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-            app:spanCount="8" />
-
-        <TextView
-            android:id="@+id/extra_deck_tv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Extra"
-            android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/extra_rv"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-            app:spanCount="8" />
-
-        <TextView
-            android:id="@+id/side_deck_tv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Side"
-            android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/side_rv"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-            app:spanCount="8" />
     </LinearLayout>
 </LinearLayout>
