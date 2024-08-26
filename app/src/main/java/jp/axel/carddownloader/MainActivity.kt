@@ -1,11 +1,9 @@
 package jp.axel.carddownloader
 
 import android.app.Activity
-import android.content.ContentResolver.MimeTypeInfo
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.view.Menu
@@ -15,22 +13,17 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.documentfile.provider.DocumentFile
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import okhttp3.ResponseBody
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.BufferedReader
 import java.io.IOException
-import java.io.InputStream
 import java.io.InputStreamReader
 
 private const val OPEN_DECK_REQUEST_CODE = 632
@@ -67,8 +60,11 @@ class MainActivity : AppCompatActivity() {
         nameTv = findViewById(R.id.deck_name_tv)
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
-        val saveFolder = sharedPreferences.getString("save_folder", "")
-        saveFolderUri = Uri.parse(saveFolder)
+        val saveFolder = sharedPreferences.getString("save_folder", "")!!
+        if (saveFolder.isNotEmpty())
+            saveFolderUri = Uri.parse(saveFolder)
+        else
+            showSetSaveLocationDialog()
 
         val baseUrl = "https://images.ygoprodeck.com/images/cards/"
         retrofit =
@@ -162,7 +158,17 @@ class MainActivity : AppCompatActivity() {
         downloadTv = view.findViewById(R.id.download_tv)
         downloadPB = view.findViewById(R.id.download_pb)
         dialogBuilder.setView(view)
+        dialogBuilder.setCancelable(false)
         busyDialog = dialogBuilder.show()
+    }
+
+    private fun showSetSaveLocationDialog() {
+        val dialogBuilder = MaterialAlertDialogBuilder(this)
+        dialogBuilder.setTitle("Save location")
+        dialogBuilder.setMessage("Please select a folder to save card pictures in")
+        dialogBuilder.setPositiveButton("Select folder") { _, _ -> setSaveLocation() }
+        dialogBuilder.setCancelable(false)
+        dialogBuilder.show()
     }
 
     private fun setSaveLocation() {
