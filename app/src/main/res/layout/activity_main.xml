@@ -25,20 +25,20 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:visibility="gone">
+        android:visibility="visible">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center">
+            android:gravity="center"
+            android:orientation="vertical">
 
             <TextView
-                android:singleLine="true"
                 android:id="@+id/deck_name_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:singleLine="true"
                 android:text="Deck name"
                 android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
                 android:textSize="20sp"
@@ -56,12 +56,19 @@
 
 
         <TextView
-            android:layout_marginTop="6dp"
             android:id="@+id/main_deck_tv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
             android:text="Main"
             android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/main_rv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+            app:spanCount="8" />
 
         <TextView
             android:id="@+id/extra_deck_tv"
@@ -70,11 +77,25 @@
             android:text="Extra"
             android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
 
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/extra_rv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+            app:spanCount="8" />
+
         <TextView
             android:id="@+id/side_deck_tv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Side"
             android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/side_rv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+            app:spanCount="8" />
     </LinearLayout>
 </LinearLayout>

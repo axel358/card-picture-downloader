@@ -15,6 +15,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.documentfile.provider.DocumentFile
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.CoroutineScope
@@ -29,9 +30,9 @@ import java.io.InputStreamReader
 private const val OPEN_DECK_REQUEST_CODE = 632
 private const val OPEN_FOLDER_REQUEST_CODE = 236
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), CardAdapter.OnCardClickListener {
     private lateinit var busyDialog: AlertDialog
-    private lateinit var saveFolderUri: Uri
+    private lateinit var saveFolder: DocumentFile
     private lateinit var apiService: ApiService
     private lateinit var retrofit: Retrofit
     private lateinit var loadedDeck: Uri
@@ -47,6 +48,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var downloadPB: ProgressBar
     private lateinit var downloadTv: TextView
+    private lateinit var mainRv: RecyclerView
+    private lateinit var extraRv: RecyclerView
+    private lateinit var sideRv: RecyclerView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,11 +62,14 @@ class MainActivity : AppCompatActivity() {
         loadButton = findViewById(R.id.load_deck_button)
         deckLayout = findViewById(R.id.deck_layout)
         nameTv = findViewById(R.id.deck_name_tv)
+        mainRv = findViewById(R.id.main_rv)
+        extraRv = findViewById(R.id.extra_rv)
+        sideRv = findViewById(R.id.side_rv)
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
-        val saveFolder = sharedPreferences.getString("save_folder", "")!!
-        if (saveFolder.isNotEmpty())
-            saveFolderUri = Uri.parse(saveFolder)
+        val saveFolderUri = sharedPreferences.getString("save_folder", "")!!
+        if (saveFolderUri.isNotEmpty())
+            saveFolder = DocumentFile.fromTreeUri(this, Uri.parse(saveFolderUri))!!
         else
             showSetSaveLocationDialog()
 
@@ -93,15 +100,22 @@ class MainActivity : AppCompatActivity() {
                         nameTv.text = Utils.fileNameFromUri(loadedDeck)
                         loadButton.visibility = View.GONE
                         deckLayout.visibility = View.VISIBLE
+                        var imagesFolder = saveFolder.findFile("images")
+                        if (imagesFolder == null)
+                            imagesFolder = saveFolder.createDirectory("images")!!
+                        mainRv.adapter = CardAdapter(imagesFolder, mainCards, this@MainActivity)
+                        extraRv.adapter = CardAdapter(imagesFolder, extraCards, this@MainActivity)
+                        sideRv.adapter = CardAdapter(imagesFolder, sideCards, this@MainActivity)
                     }
                 }
 
             } else if (requestCode == OPEN_FOLDER_REQUEST_CODE) {
-                saveFolderUri = intent!!.data!!
+                val saveFolderUri = intent!!.data!!
                 contentResolver.takePersistableUriPermission(
                     saveFolderUri,
                     Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                 )
+                saveFolder = DocumentFile.fromTreeUri(this, saveFolderUri)!!
                 sharedPreferences.edit().putString("save_folder", saveFolderUri.toString()).apply()
             }
         }
@@ -116,10 +130,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun downloadDeckImages(view: View) {
-        val saveFolder = DocumentFile.fromTreeUri(this, saveFolderUri)!!
         var imagesFolder = saveFolder.findFile("images")
         if (imagesFolder == null)
-            imagesFolder = saveFolder.createDirectory("images")
+            imagesFolder = saveFolder.createDirectory("images")!!
         val allCards = mainCards + extraCards + sideCards
         showBusyDialog()
         downloadPB.max = allCards.size
@@ -148,6 +161,9 @@ class MainActivity : AppCompatActivity() {
             }
             CoroutineScope(Dispatchers.Main).launch {
                 busyDialog.cancel()
+                mainRv.adapter = CardAdapter(imagesFolder, mainCards, this@MainActivity)
+                extraRv.adapter = CardAdapter(imagesFolder, extraCards, this@MainActivity)
+                sideRv.adapter = CardAdapter(imagesFolder, sideCards, this@MainActivity)
             }
         }
     }
@@ -189,5 +205,9 @@ class MainActivity : AppCompatActivity() {
             R.id.action_set_save_folder -> setSaveLocation()
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    override fun onCardClicked(card: String, itemView: View) {
+
     }
 }
