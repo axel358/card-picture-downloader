@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:icon="@drawable/ic_cards"
+        android:id="@+id/action_load_deck"
+        android:title="Load deck"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_download_card"
+        android:title="Download card" />
+    <item
+        android:id="@+id/action_download_art"
+        android:title="Download card art" />
+    <item
+        android:id="@+id/action_set_save_folder"
+        android:title="Set save folder" />
+    <item
+        android:id="@+id/action_about"
+        android:title="About" />
+</menu>

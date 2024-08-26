@@ -1,0 +1,187 @@
+package jp.axel.carddownloader
+
+import android.app.Activity
+import android.content.ContentResolver.MimeTypeInfo
+import android.content.Intent
+import android.content.SharedPreferences
+import android.net.Uri
+import androidx.appcompat.app.AppCompatActivity
+import android.os.Bundle
+import android.preference.PreferenceManager
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.widget.LinearLayout
+import android.widget.ProgressBar
+import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
+import androidx.documentfile.provider.DocumentFile
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.ResponseBody
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStream
+import java.io.InputStreamReader
+
+private const val OPEN_DECK_REQUEST_CODE = 632
+private const val OPEN_FOLDER_REQUEST_CODE = 236
+
+class MainActivity : AppCompatActivity() {
+    private lateinit var busyDialog: AlertDialog
+    private lateinit var saveFolderUri: Uri
+    private lateinit var apiService: ApiService
+    private lateinit var retrofit: Retrofit
+    private lateinit var loadedDeck: Uri
+    private var mainCards = emptyList<String>()
+    private var extraCards = emptyList<String>()
+    private var sideCards = emptyList<String>()
+    private lateinit var mainTv: TextView
+    private lateinit var extraTv: TextView
+    private lateinit var sideTv: TextView
+    private lateinit var loadButton: MaterialButton
+    private lateinit var deckLayout: LinearLayout
+    private lateinit var nameTv: TextView
+    private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var downloadPB: ProgressBar
+    private lateinit var downloadTv: TextView
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        mainTv = findViewById(R.id.main_deck_tv)
+        extraTv = findViewById(R.id.extra_deck_tv)
+        sideTv = findViewById(R.id.side_deck_tv)
+        loadButton = findViewById(R.id.load_deck_button)
+        deckLayout = findViewById(R.id.deck_layout)
+        nameTv = findViewById(R.id.deck_name_tv)
+
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+        val saveFolder = sharedPreferences.getString("save_folder", "")
+        saveFolderUri = Uri.parse(saveFolder)
+
+        val baseUrl = "https://images.ygoprodeck.com/images/cards/"
+        retrofit =
+            Retrofit.Builder().baseUrl(baseUrl).addConverterFactory(GsonConverterFactory.create())
+                .build()
+        apiService = retrofit.create(ApiService::class.java)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
+        super.onActivityResult(requestCode, resultCode, intent)
+
+        if (resultCode == Activity.RESULT_OK) {
+            if (requestCode == OPEN_DECK_REQUEST_CODE) {
+                loadedDeck = intent!!.data!!
+                contentResolver.openInputStream(loadedDeck)!!.use { inputStream ->
+                    BufferedReader(InputStreamReader(inputStream)).use { bufferedReader ->
+                        val content = bufferedReader.readLines()
+                        mainCards =
+                            content.subList(content.indexOf("#main") + 1, content.indexOf("#extra"))
+                        extraCards =
+                            content.subList(content.indexOf("#extra") + 1, content.indexOf("!side"))
+                        sideCards = content.subList(content.indexOf("!side"), content.size - 1)
+                        mainTv.text = "Main - ${mainCards.size} cards"
+                        extraTv.text = "Extra - ${extraCards.size} cards"
+                        sideTv.text = "Side - ${sideCards.size} cards"
+                        nameTv.text = Utils.fileNameFromUri(loadedDeck)
+                        loadButton.visibility = View.GONE
+                        deckLayout.visibility = View.VISIBLE
+                    }
+                }
+
+            } else if (requestCode == OPEN_FOLDER_REQUEST_CODE) {
+                saveFolderUri = intent!!.data!!
+                contentResolver.takePersistableUriPermission(
+                    saveFolderUri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                )
+                sharedPreferences.edit().putString("save_folder", saveFolderUri.toString()).apply()
+            }
+        }
+    }
+
+    fun loadDeck(view: View?) {
+        startActivityForResult(
+            Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE)
+                .setType("*/*"),
+            OPEN_DECK_REQUEST_CODE
+        )
+    }
+
+    fun downloadDeckImages(view: View) {
+        val saveFolder = DocumentFile.fromTreeUri(this, saveFolderUri)!!
+        var imagesFolder = saveFolder.findFile("images")
+        if (imagesFolder == null)
+            imagesFolder = saveFolder.createDirectory("images")
+        val allCards = mainCards + extraCards + sideCards
+        showBusyDialog()
+        downloadPB.max = allCards.size
+        downloadTv.text = "Downloading 1/${allCards.size}"
+        CoroutineScope(Dispatchers.Default).launch {
+            var progress = 1
+            allCards.forEach { card ->
+                val getCall = apiService.downloadCard(card)!!
+                try {
+                    val response = getCall.execute()
+                    if (response.isSuccessful && response.body() != null) {
+                        val content = response.body()!!.byteStream()
+                        val fileName = "$card.jpg"
+                        var imageFile = imagesFolder!!.findFile(fileName)
+                        imageFile?.delete()
+                        imageFile = imagesFolder.createFile("image/*", fileName)
+                        Utils.copy(content, contentResolver.openOutputStream(imageFile!!.uri)!!)
+                    }
+                } catch (e: IOException) {
+                }
+                progress++
+                CoroutineScope(Dispatchers.Main).launch {
+                    downloadPB.progress = progress
+                    downloadTv.text = "Downloading $progress/${allCards.size}"
+                }
+            }
+            CoroutineScope(Dispatchers.Main).launch {
+                busyDialog.cancel()
+            }
+        }
+    }
+
+    private fun showBusyDialog() {
+        val dialogBuilder = MaterialAlertDialogBuilder(this)
+        val view = layoutInflater.inflate(R.layout.dialog_download_progress, null)
+        downloadTv = view.findViewById(R.id.download_tv)
+        downloadPB = view.findViewById(R.id.download_pb)
+        dialogBuilder.setView(view)
+        busyDialog = dialogBuilder.show()
+    }
+
+    private fun setSaveLocation() {
+        startActivityForResult(
+            Intent(Intent.ACTION_OPEN_DOCUMENT_TREE),
+            OPEN_FOLDER_REQUEST_CODE
+        )
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.action_load_deck -> loadDeck(null)
+            R.id.action_set_save_folder -> setSaveLocation()
+        }
+        return super.onOptionsItemSelected(item)
+    }
+}
