@@ -1,6 +1,5 @@
 package jp.axel.carddownloader
 
-import android.content.Context
 import android.net.Uri
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
@@ -9,6 +8,7 @@ import java.io.InputStream
 import java.io.OutputStream
 
 object Utils {
+    val missingCards = mutableListOf<String>()
     fun fileNameFromUri(uri: Uri): String {
         val schemeSpecificPart = uri.schemeSpecificPart
         return schemeSpecificPart.substring(

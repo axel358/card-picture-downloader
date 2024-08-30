@@ -33,8 +33,11 @@ class CardAdapter(
                 CoroutineScope(Dispatchers.Main).launch {
                     if (cardPicture != null) {
                         Picasso.get().load(cardPicture.uri).resize(271, 395).into(cardImageView)
-                    } else
+                    } else {
                         cardImageView.setImageResource(R.drawable.blank_card)
+                        if (!Utils.missingCards.contains(card))
+                            Utils.missingCards.add(card)
+                    }
                 }
             }
             itemView.setOnClickListener {

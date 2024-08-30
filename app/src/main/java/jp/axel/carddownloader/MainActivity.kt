@@ -12,6 +12,7 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityOptionsCompat
@@ -129,33 +130,35 @@ class MainActivity : AppCompatActivity(), CardAdapter.OnCardClickListener {
     }
 
     fun downloadDeckImages(view: View) {
+        if (Utils.missingCards.size < 1)
+            return
+
         var imagesFolder = saveFolder.findFile("images")
         if (imagesFolder == null)
             imagesFolder = saveFolder.createDirectory("images")!!
-        val allCards = mainCards + extraCards + sideCards
+        //val allCards = mainCards + extraCards + sideCards
         showBusyDialog()
-        downloadPB.max = allCards.size
-        downloadTv.text = "Downloading 1/${allCards.size}"
+        downloadPB.max = Utils.missingCards.size
+        downloadTv.text = "Downloading 1/${Utils.missingCards.size}"
         CoroutineScope(Dispatchers.Default).launch {
             var progress = 1
-            allCards.forEach { card ->
+            Utils.missingCards.forEach { card ->
                 val getCall = apiService.downloadCard(card)!!
                 try {
                     val response = getCall.execute()
                     if (response.isSuccessful && response.body() != null) {
                         val content = response.body()!!.byteStream()
                         val fileName = "$card.jpg"
-                        var imageFile = imagesFolder!!.findFile(fileName)
-                        imageFile?.delete()
-                        imageFile = imagesFolder.createFile("image/*", fileName)
+                        val imageFile = imagesFolder.createFile("image/*", fileName)
                         Utils.copy(content, contentResolver.openOutputStream(imageFile!!.uri)!!)
+                        Utils.missingCards.remove(card)
                     }
                 } catch (e: IOException) {
                 }
                 progress++
                 CoroutineScope(Dispatchers.Main).launch {
                     downloadPB.progress = progress
-                    downloadTv.text = "Downloading $progress/${allCards.size}"
+                    downloadTv.text = "Downloading $progress/${Utils.missingCards.size}"
                 }
             }
             CoroutineScope(Dispatchers.Main).launch {
@@ -163,6 +166,12 @@ class MainActivity : AppCompatActivity(), CardAdapter.OnCardClickListener {
                 mainRv.adapter = CardAdapter(imagesFolder, mainCards, this@MainActivity)
                 extraRv.adapter = CardAdapter(imagesFolder, extraCards, this@MainActivity)
                 sideRv.adapter = CardAdapter(imagesFolder, sideCards, this@MainActivity)
+                if (Utils.missingCards.size > 0)
+                    Toast.makeText(
+                        this@MainActivity,
+                        Utils.missingCards.size.toString() + " image(s) couldn't be downloaded",
+                        Toast.LENGTH_LONG
+                    ).show()
             }
         }
     }
