@@ -6,7 +6,9 @@
         <item name="android:navigationBarColor">?attr/colorSurface</item>
     </style>
 
-
-
     <style name="Theme.CardDownloader" parent="Base.Theme.CardDownloader" />
+
+    <style name="Theme.CardDownloader.NoActionBar" parent="Theme.CardDownloader">
+        <item name="windowNoTitle">true</item>
+    </style>
 </resources>

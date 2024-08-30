@@ -14,6 +14,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityOptionsCompat
 import androidx.documentfile.provider.DocumentFile
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
@@ -26,6 +27,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
+
 
 private const val OPEN_DECK_REQUEST_CODE = 632
 private const val OPEN_FOLDER_REQUEST_CODE = 236
@@ -205,6 +207,9 @@ class MainActivity : AppCompatActivity(), CardAdapter.OnCardClickListener {
     }
 
     override fun onCardClicked(card: String, itemView: View) {
-
+        val intent: Intent =
+            Intent(this, CardDetailsActivity::class.java).putExtra("card", card)
+        val options = ActivityOptionsCompat.makeSceneTransitionAnimation(this, itemView, "fade")
+        startActivity(intent, options.toBundle())
     }
 }
