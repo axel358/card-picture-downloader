@@ -106,7 +106,6 @@ class MainActivity : AppCompatActivity(), CardAdapter.OnCardClickListener {
                         sideRv.adapter = CardAdapter(imagesFolder, sideCards, this@MainActivity)
                     }
                 }
-
             } else if (requestCode == OPEN_FOLDER_REQUEST_CODE) {
                 val saveFolderUri = intent!!.data!!
                 contentResolver.takePersistableUriPermission(

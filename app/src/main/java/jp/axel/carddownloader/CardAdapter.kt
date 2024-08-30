@@ -8,6 +8,10 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.documentfile.provider.DocumentFile
 import androidx.recyclerview.widget.RecyclerView
+import com.squareup.picasso.Picasso
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class CardAdapter(
     private val imagesFolder: DocumentFile,
@@ -24,11 +28,15 @@ class CardAdapter(
         private val cardImageView: ImageView = itemView.findViewById(R.id.card_iv)
 
         fun bind(card: String) {
-            val cardPicture = imagesFolder.findFile("$card.jpg")
-            if (cardPicture != null)
-                cardImageView.setImageURI(cardPicture.uri)
-            else
-                cardImageView.setImageResource(R.drawable.blank_card)
+            CoroutineScope(Dispatchers.Default).launch {
+                val cardPicture = imagesFolder.findFile("$card.jpg")
+                CoroutineScope(Dispatchers.Main).launch {
+                    if (cardPicture != null) {
+                        Picasso.get().load(cardPicture.uri).resize(271, 395).into(cardImageView)
+                    } else
+                        cardImageView.setImageResource(R.drawable.blank_card)
+                }
+            }
             itemView.setOnClickListener {
                 onCardClickListener.onCardClicked(card, itemView)
             }
