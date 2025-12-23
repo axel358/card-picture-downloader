@@ -133,17 +133,20 @@ class MainActivity : AppCompatActivity(), CardAdapter.OnCardClickListener {
     fun downloadDeckImages(view: View) {
         if (Utils.missingCards.size < 1)
             return
+        downloadImages(Utils.missingCards.toList())
+    }
 
+    fun downloadImages(cards: List<String>) {
         var imagesFolder = saveFolder.findFile("images")
         if (imagesFolder == null)
             imagesFolder = saveFolder.createDirectory("images")!!
         //val allCards = mainCards + extraCards + sideCards
         showBusyDialog()
-        downloadPB.max = Utils.missingCards.size
-        downloadTv.text = "Downloading 1/${Utils.missingCards.size}"
+        downloadPB.max = cards.size
+        downloadTv.text = "Downloading 1/${cards.size}"
         CoroutineScope(Dispatchers.Default).launch {
             var progress = 1
-            Utils.missingCards.forEach { card ->
+            cards.forEach { card ->
                 val getCall = apiService.downloadCard(card)!!
                 try {
                     val response = getCall.execute()
@@ -159,7 +162,7 @@ class MainActivity : AppCompatActivity(), CardAdapter.OnCardClickListener {
                 progress++
                 CoroutineScope(Dispatchers.Main).launch {
                     downloadPB.progress = progress
-                    downloadTv.text = "Downloading $progress/${Utils.missingCards.size}"
+                    downloadTv.text = "Downloading $progress/${cards.size}"
                 }
             }
             CoroutineScope(Dispatchers.Main).launch {
@@ -218,9 +221,13 @@ class MainActivity : AppCompatActivity(), CardAdapter.OnCardClickListener {
     }
 
     override fun onCardClicked(card: String, itemView: View) {
-        val intent: Intent =
-            Intent(this, CardDetailsActivity::class.java).putExtra("card", card)
-        val options = ActivityOptionsCompat.makeSceneTransitionAnimation(this, itemView, "fade")
-        startActivity(intent, options.toBundle())
+        if (Utils.missingCards.contains(card)) {
+            downloadImages(listOf(card))
+        } else {
+            val intent: Intent =
+                Intent(this, CardDetailsActivity::class.java).putExtra("card", card)
+            val options = ActivityOptionsCompat.makeSceneTransitionAnimation(this, itemView, "fade")
+            startActivity(intent, options.toBundle())
+        }
     }
 }
