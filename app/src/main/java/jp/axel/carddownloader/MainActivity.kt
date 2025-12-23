@@ -28,6 +28,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
+import android.util.Log
 
 
 private const val OPEN_DECK_REQUEST_CODE = 632
@@ -172,6 +173,7 @@ class MainActivity : AppCompatActivity(), CardAdapter.OnCardClickListener {
                         Utils.missingCards.size.toString() + " image(s) couldn't be downloaded",
                         Toast.LENGTH_LONG
                     ).show()
+                Log.e("miss", Utils.missingCards.toString())
             }
         }
     }
